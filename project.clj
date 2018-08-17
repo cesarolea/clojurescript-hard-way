@@ -2,8 +2,7 @@
   :plugins [[lein-cljsbuild "1.1.7"]]
   :source-paths ["src/clj"]
 
-  :dependencies [[org.clojure/clojure "1.8.0"]
-                 [org.clojure/clojurescript "1.10.339"]]
+  :dependencies [[org.clojure/clojure "1.8.0"]]
 
   :cljsbuild {:builds
               [{:id "dev"
@@ -23,4 +22,8 @@
 
   :main ^:skip-aot clojurescript-hard-way.core
   :target-path "target/%s"
-  :profiles {:uberjar {:aot :all}})
+  :profiles
+  {:uberjar {:aot :all}
+   :dev {:dependencies [[com.bhauman/figwheel-main "0.1.7"]
+                        [com.bhauman/rebel-readline-cljs "0.1.4"]
+                        [org.clojure/clojurescript "1.10.339"]]}})
