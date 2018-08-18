@@ -263,7 +263,7 @@ In the cljs.user ns, controls can be called without ns ie. (conns) instead of (f
 2018-08-17 18:14:03.002:INFO::main: Logging initialized @6840ms
 ```
 
-Es bastante explícito. Algo importante a notar es que Figwheel Main tiene su propia ruta en donde genera el código JavaScript compilado:
+Bastante explícito. Algo importante a notar es que Figwheel Main tiene su propia ruta en donde genera el código JavaScript compilado:
 
     [Figwheel] Successfully compiled build dev to "resources/public/cljs-out/dev-main.js" in 0.504 seconds.
 
