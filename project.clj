@@ -1,8 +1,13 @@
 (defproject clojurescript-hard-way "0.1.0-SNAPSHOT"
   :plugins [[lein-cljsbuild "1.1.7"]]
-  :source-paths ["src/clj"]
 
-  :dependencies [[org.clojure/clojure "1.8.0"]]
+  :source-paths ["src/clj" "src/cljs"]
+  :resource-paths ["resources" "target"]
+
+  :dependencies [[org.clojure/clojure "1.9.0"]]
+
+  :aliases {"fig" ["trampoline" "run" "-m" "figwheel.main"]
+            "fig-dev" ["trampoline" "run" "-m" "figwheel.main" "-b" "dev" "-r"]}
 
   :cljsbuild {:builds
               [{:id "dev"
@@ -21,6 +26,7 @@
                            :pretty-print false}}]}
 
   :main ^:skip-aot clojurescript-hard-way.core
+  :pedantic? :abort
   :target-path "target/%s"
   :profiles
   {:uberjar {:aot :all}
