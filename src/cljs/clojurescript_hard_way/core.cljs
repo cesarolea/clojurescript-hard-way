@@ -1,24 +1,25 @@
-(ns clojurescript-hard-way.core)
+(ns ^:figwheel-hooks clojurescript-hard-way.core
+  (:require [reagent.core :as r]))
 
-(defn toggle-doomguy
-  "toggles the doomguy img"
-  []
-  (let [doomguy (-> js/document (.getElementById "doomguy"))
-        visibility (-> doomguy .-style .-visibility)]
-    (condp = visibility
-      "hidden" (set! (-> doomguy .-style .-visibility) "visible")
-      "visible" (set! (-> doomguy .-style .-visibility) "hidden")
-      (set! (-> doomguy .-style .-visibility) "visible"))))
+(defn doomguy-component []
+  [:img {:id "doomguy"
+         :src "https://vignette.wikia.nocookie.net/wadguia/images/6/62/Godmode_face.png/revision/latest?cb=20141012222849"}])
 
-(-> js/document
-    (.getElementsByTagName "head")
-    (aget 0)
-    .-innerHTML
-    (set! "<style>body{color:#FF0000; background-color:#1B1B1B;}</style>"))
+(defn title-component []
+  [:div "Activando God-Mode!"
+   [:p [doomguy-component]]])
 
-(-> js/document
-    (.getElementById "app")
-    (.-innerHTML)
-    (set! "Activating God-Mode!</p><img id='doomguy' src='https://vignette.wikia.nocookie.net/wadguia/images/6/62/Godmode_face.png/revision/latest?cb=20141012222849' />"))
+(defn ^:after-load mount-root []
+  (r/render [title-component]
+            (.getElementById js/document "app")))
 
-(defonce do-timer (js/setInterval toggle-doomguy 1000))
+(defn ^:export main []
+  ;; do some other init
+
+  (-> js/document
+      (.getElementsByTagName "head")
+      (aget 0)
+      .-innerHTML
+      (set! "<style>body{color:#FF0000; background-color:#1B1B1B;}</style>"))
+
+  (mount-root))

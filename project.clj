@@ -34,7 +34,8 @@
    :dev {:dependencies [[com.bhauman/figwheel-main "0.1.7"]
                         [com.bhauman/rebel-readline-cljs "0.1.4"]
                         [org.clojure/clojurescript "1.10.339"]
-                        [cider/piggieback "0.3.8"]]
+                        [cider/piggieback "0.3.8"]
+                        [reagent "0.8.1"]]
          :source-paths ["env/dev/clj"]
          :repl-options {:init-ns user
                         :nrepl-middleware [cider.piggieback/wrap-cljs-repl]}}})
