@@ -172,7 +172,7 @@ Si ya el comando anterior era algo engorroso, este ha sido la gota que derramó 
 
 ```
 :aliases {"fig" ["trampoline" "run" "-m" "figwheel.main"]
-          "fig-dev" ["trampoline" "run" "-m" "figwheel.main" "-b" "dev" "-r]}
+          "fig-dev" ["trampoline" "run" "-m" "figwheel.main" "-b" "dev" "-r"]}
 ```
 
 El primer alias `fig` ejecuta Figwheel Main en su punto de entrada. El segundo alias `fig-dev` igual ejecuta Figwheel Main en su punto de entrada, pero además especifica el perfil `:dev` y finalmente `-r` para ejecutar un REPL de ClojureScript. Con estos aliases podemos ejecutar Figwheel Main de la siguiente manera:
