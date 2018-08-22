@@ -6,7 +6,7 @@
          :src "https://vignette.wikia.nocookie.net/wadguia/images/6/62/Godmode_face.png/revision/latest?cb=20141012222849"}])
 
 (defn title-component []
-  [:div "Activando God-Mode!"
+  [:div "Activating God-Mode!"
    [:p [doomguy-component]]])
 
 (defn ^:after-load mount-root []
