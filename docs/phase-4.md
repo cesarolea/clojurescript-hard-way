@@ -97,6 +97,112 @@ Estamos listos para usar Reagent. En `core.cljs`:
   (mount-root))
 ```
 
+Son puras funciones. Vamos a explicar paso a paso cada una, de abajo hacia arriba (y con la mano en la cintura si así lo desean). Primero la función `main`:
+
+```
+(defn ^:export main []
+  (-> js/document
+      (.getElementsByTagName "head")
+      (aget 0)
+      .-innerHTML
+      (set! "<style>body{color:#FF0000; background-color:#1B1B1B;}</style>"))
+  (mount-root))
+```
+
+Este es el punto de entrada a la aplicación, y se ejecuta cuando se carga la página que a su vez contiene nuestro código ClojureScript compilado. Aquí hay varias cosas que resaltar; primero está el hecho de que es una función, y así nomas porque si no va a ser ejecutada. Recordemos que todo esto se traduce (_transpila_) a JavaScript, entonces imaginemos que tenemos lo siguiente:
+
+```
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+    </head>
+    <body>
+        <div id="app"></div>
+        <script src="cljs-out/dev-main.js" type="text/javascript"></script>
+    </body>
+</html>
+```
+
+Al cargar el código JavaScript, lo que va a suceder es que se van a cargar varias funciones:
+
+```
+function doomguy-component() {...};
+function title-component() {...};
+function mount-root() {...};
+function main() {...};
+```
+
+Pero no se va a ejecutar ninguna. Eso lo arreglamos fácilmente:
+
+```
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+    </head>
+    <body>
+        <div id="app"></div>
+        <script src="cljs-out/dev-main.js" type="text/javascript"></script>
+        <script type="text/javascript">clojurescript_hard_way.core.main()</script>
+    </body>
+</html>
+```
+
+Simplemente le pedimos ejecutar la función `main`. Por eso la definición completa de 'main` incluye el metadato `^:export` que le dice al compilador que cuando haga sus optimizaciones respete el nombre de la función, porque si no lo hace entonces nuestro punto de entrada no va a funcionar. Después lo que viene es simplemente obtener el elemento `head` del documento y le asignamos una etiqueta `style` para que se vea bien profesional. Hasta aquí no hemos desplegado nada en pantalla, eso viene al final con la ejecución de `(mount-root)`.
+
+```
+(defn mount-root []
+  (r/render [title-component]
+            (.getElementById js/document "app")))
+```
+
+`mount-root` simplemente renderea un componente (otra función, `title-component`) en el elemento `app` `(.getElementById js/document "app")`. La función `r/render` ya es propia de Reagent. A su vez, `title-component` es una función que regresa el _markup_ del elemento que vamos a renderear:
+
+```
+(defn title-component []
+  [:div "Activating God-Mode!"
+   [:p [doomguy-component]]])
+```
+
+Eso es equivalente a:
+
+```
+<div>"Activating God-Mode!"<p><!-- Aqui va otro componente --></p></div>
+```
+
+Y por último el componente `doomguy-component` que igual es una función que regresa el _markup_ del componente:
+
+```
+(defn doomguy-component []
+  [:img {:id "doomguy"
+         :src "https://vignette.wikia.nocookie.net/wadguia/images/6/62/Godmode_face.png/revision/latest?cb=20141012222849"}])
+```
+
+Entonces programar una interfaz gráfica con Reagent es cuestión de ir armando componentes como bloques lego. Cada componente es una función.
+
+Pero Reagent es mucho más que sólo crear componentes con vectores y mapas. En realidad Reagent expone la mayoría de los eventos de React, además de ofrecer un mecanismo para que los componentes mantengan valores (estado) local, actualizándose automáticamente cuando este estado cambie. Por ejemplo el siguiente componente:
+
+```
+(defn doomguy-animation []
+  (let [click-count (r/atom 0)]
+    (fn []
+      [:img {:id "doomguy"
+             :src (str "images/doomguy-frame-"
+                       (if (even? @click-count) "even" "odd")
+                       ".png")
+             :on-click #(swap! click-count inc)}])))
+```
+
+Este componente mantiene estado local en `click-count (r/atom 0)`. Pero no es un `atom` cualquiera, es uno de Reagent, y lo que hace es causar que cualquier componente de dependa de el se vuelva a pintar cuando el valor del `atom` cambie.
+
+En nuestro caso el valor inicia en `0` y con cada click a la imagen vamos incrementando su valor, luego verificamos si es par o impar para generar la ruta completa del `sprite`:
+
+- Par: `images/doomguy-frame-even.png`
+- Impar: `images/doomguy-frame-odd.png`
+
+Hay que verlo en funcionamiento:
+
 
 
 # Enlaces
