@@ -1,9 +1,10 @@
 (ns ^:figwheel-hooks clojurescript-hard-way.core
   (:require [reagent.core :as r]))
 
-(defn doomguy-component []
-  [:img {:id "doomguy"
-         :src "https://vignette.wikia.nocookie.net/wadguia/images/6/62/Godmode_face.png/revision/latest?cb=20141012222849"}])
+;; let's try this again...
+;; first the animation
+;; good, now reload
+;; WE DID IT!
 
 (defn doomguy-animation []
   (let [click-count (r/atom 0)]
@@ -15,7 +16,7 @@
              :on-click #(swap! click-count inc)}])))
 
 (defn title-component []
-  [:div "Activating God-Mode!"
+  [:div "Doomguy Elite Animation Software"
    [:p [doomguy-animation]]])
 
 (defn ^:after-load mount-root []

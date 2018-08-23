@@ -11,14 +11,7 @@
             "fig-dev" ["trampoline" "run" "-m" "figwheel.main" "-b" "dev" "-r"]}
 
   :cljsbuild {:builds
-              [{:id "dev"
-                :source-paths ["src/cljs"]
-                :compiler {:main "clojurescript-hard-way.core"
-                           :output-dir "resources/public/js/compiled/out"
-                           :output-to "resources/public/js/compiled/cshard-dev.js"
-                           :asset-path "js/compiled/out"
-                           :optimizations :none}}
-               {:id "min"
+              [{:id "min"
                 :source-paths ["src/cljs"]
                 :compiler {:main "clojurescript-hard-way.core"
                            :output-to "resources/public/js/compiled/cshard-prod.js"
@@ -35,8 +28,9 @@
                         [com.bhauman/rebel-readline-cljs "0.1.4"]
                         [org.clojure/clojurescript "1.10.339"]
                         [org.clojure/tools.nrepl "0.2.13"]
-                        [cider/piggieback "0.3.8"]
-                        [reagent "0.8.1"]]
+                        [cider/piggieback "0.3.8" :exclusions [org.clojure/tools.logging]]
+                        [reagent "0.8.1"]
+                        [re-frame "0.10.5"]]
          :source-paths ["env/dev/clj"]
          :repl-options {:init-ns user
                         :nrepl-middleware [cider.piggieback/wrap-cljs-repl]}}})

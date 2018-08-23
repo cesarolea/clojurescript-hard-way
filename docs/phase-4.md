@@ -157,7 +157,7 @@ Simplemente le pedimos ejecutar la función `main`. Por eso la definición compl
             (.getElementById js/document "app")))
 ```
 
-`mount-root` simplemente renderea un componente (otra función, `title-component`) en el elemento `app` `(.getElementById js/document "app")`. La función `r/render` ya es propia de Reagent. A su vez, `title-component` es una función que regresa el _markup_ del elemento que vamos a renderear:
+`mount-root` renderea un componente (que es otra función, `title-component`) en el elemento `app` `(.getElementById js/document "app")`. La función `r/render` ya es propia de Reagent. A su vez, `title-component` es una función que regresa el _markup_ del elemento que vamos a renderear:
 
 ```
 (defn title-component []
@@ -179,7 +179,7 @@ Y por último el componente `doomguy-component` que igual es una función que re
          :src "https://vignette.wikia.nocookie.net/wadguia/images/6/62/Godmode_face.png/revision/latest?cb=20141012222849"}])
 ```
 
-Entonces programar una interfaz gráfica con Reagent es cuestión de ir armando componentes como bloques lego. Cada componente es una función.
+Entonces programar una interfaz gráfica con Reagent es cuestión de ir armando componentes como bloques lego. Cada componente es una función. Y aquí es donde está el principal atractivo de Reagent: manipular la estructura de tu interfaz gráfica haciendo uso de [colecciones](https://blog.devz.mx/colecciones-en-clojure/) que ya conoces.
 
 Pero Reagent es mucho más que sólo crear componentes con vectores y mapas. En realidad Reagent expone la mayoría de los eventos de React, además de ofrecer un mecanismo para que los componentes mantengan valores (estado) local, actualizándose automáticamente cuando este estado cambie. Por ejemplo el siguiente componente:
 
@@ -201,9 +201,150 @@ En nuestro caso el valor inicia en `0` y con cada click a la imagen vamos increm
 - Par: `images/doomguy-frame-even.png`
 - Impar: `images/doomguy-frame-odd.png`
 
-Hay que verlo en funcionamiento:
+El código completo nos quedaría así:
 
+```
+(ns clojurescript-hard-way.core
+  (:require [reagent.core :as r]))
 
+(defn doomguy-animation
+  "Changes the image on click"
+  []
+  (let [click-count (r/atom 0)]
+    (fn []
+      [:img {:id "doomguy"
+             :src (str "images/doomguy-frame-"
+                       (if (even? @click-count) "even" "odd")
+                       ".png")
+             :on-click #(swap! click-count inc)}])))
+
+(defn title-component []
+  [:div "Activating God-Mode!"
+   [:p [doomguy-animation]]])
+
+(defn mount-root []
+  (r/render [title-component]
+            (.getElementById js/document "app")))
+
+(defn ^:export main []
+  ;; do some other init
+
+  (-> js/document
+      (.getElementsByTagName "head")
+      (aget 0)
+      .-innerHTML
+      (set! "<style>body{color:#FF0000; background-color:#1B1B1B;}</style>"))
+
+  (mount-root))
+```
+
+Lo único que hice fue agregar el componente `doomguy-animation` y modificar `title-component` para que lo cargue. Hay que verlo en funcionamiento:
+
+<<insertar gif>>
+
+Pues funciona, pero perdimos el _hot reload_. ¿Qué pasó?
+
+Como comentábamos antes, Figwheel se encarga de compilar y recargar nuestro código en el navegador. Y si, efectivamente lo recarga, pero no hay nada que cause que Reagent vuelva a dibujar el componente `title-component` que modificamos. Al dar click modificamos el estado de `click-count` lo que causa que cambie la imagen, pero `title-component` no tienen ningún estado interno que cambie, entonces Reagent simplemente nunca ejecuta la función que representa el componente, y por lo tanto nunca se actualiza en la pantalla. En realidad es más complicado que eso, pero una discusión del ciclo de vida de los componentes de React queda fuera del alcance de este artículo.
+
+La única razón de la existencia de la Fase 4 es precisamente cómo resolver este problema. Si lo que quieren es aprender a utilizar Reagent y/o Re-Frame, la documentación oficial de ambos repositorios es excelente (incluyendo la de Re-Frame, que poco a poco han bajándole 2 rayitas y centrándose en lo que es realmente importante). Ese no es nuestro objetivo. El objetivo es dejar listo nuestro ambiente de desarrollo, y ustedes como yo se van a topar con el mismo problema. Así que veamos como resolverlo.
+
+>La única razón de la existencia de la Fase 4 es precisamente cómo resolver este problema.
+
+¿Listos?
+
+Figwheel Main contiene [mecanismos](https://figwheel.org/docs/reloadable_code.html#setup-and-teardown-pattern) específicamente para cuando estamos alterando el DOM directamente, pero queremos mantener la recarga de código. Su uso es muy sencillo: solo agregamos algo de metadatos que serán leídos por Figwheel Main y ya. Primero marcamos nuestro _namespace_ para indicarle a Figwheel que hay _hooks_ en ese _namespace_:
+
+```
+(ns ^:figwheel-hooks clojurescript-hard-way.core
+  (:require [reagent.core :as r]))
+```
+
+Y luego le decimos qué queremos que ejecute cuando termine de cargar la página:
+
+```
+(defn ^:after-load mount-root []
+  (r/render [title-component]
+            (.getElementById js/document "app")))
+```
+
+Como se podrán imaginar también hay un `^:before-load` pero en este caso no hacemos uso de él. Es un patrón de _setup_ y _teardon_, similar a lo que seguramente han usado en sus pruebas unitarias que seguro hacen siempre y sin falta, ¿verdad?
+
+Entonces agregamos estos metadatos y:
+
+<<insertar gif>>
+
+Como diría un célebre maestro de la carrera _así si baila 'mija con el señor_. Tenemos Reagent y _hot reload_ juntos en plena armonía.
+
+## Re-Frame
+Re-Frame construye sobre lo que nos deja Reagent, es decir _markup_ para componentes usando vectores y mapas, `atom`s reactivos que actualizan los componentes que dependen de ellos, y agrega un ciclo de eventos (_event loop_) y algo de estructura. Re-Agent nos da las herramientas y suficiente cuerda para ahorcarnos con ella, y Re-Frame viene a poner orden con sus ideas estrictas sobre cómo y donde.
+
+Ya con la estructura que tenemos en el `project.clj` agregar soporte para Re-Frame es solo cuestión de agregar la dependencia `[re-frame "0.10.5"]`:
+
+```
+(defproject clojurescript-hard-way "0.1.0-SNAPSHOT"
+  :plugins [[lein-cljsbuild "1.1.7"]]
+
+  :source-paths ["src/clj" "src/cljs"]
+  :resource-paths ["resources" "target"]
+
+  :dependencies [[org.clojure/clojure "1.9.0"]
+                 [mount "0.1.13"]]
+
+  :aliases {"fig" ["trampoline" "run" "-m" "figwheel.main"]
+            "fig-dev" ["trampoline" "run" "-m" "figwheel.main" "-b" "dev" "-r"]}
+
+  :cljsbuild {:builds
+              [{:id "min"
+                :source-paths ["src/cljs"]
+                :compiler {:main "clojurescript-hard-way.core"
+                           :output-to "resources/public/js/compiled/cshard-prod.js"
+                           :closure-defines {goog.DEBUG false}
+                           :optimizations :advanced
+                           :pretty-print false}}]}
+
+  :main ^:skip-aot clojurescript-hard-way.core
+  :pedantic? :abort
+  :target-path "target/%s"
+  :profiles
+  {:uberjar {:aot :all}
+   :dev {:dependencies [[com.bhauman/figwheel-main "0.1.7"]
+                        [com.bhauman/rebel-readline-cljs "0.1.4"]
+                        [org.clojure/clojurescript "1.10.339"]
+                        [org.clojure/tools.nrepl "0.2.13"]
+                        [cider/piggieback "0.3.8" :exclusions [org.clojure/tools.logging]]
+                        [reagent "0.8.1"]
+                        [re-frame "0.10.5"]]
+         :source-paths ["env/dev/clj"]
+         :repl-options {:init-ns user
+                        :nrepl-middleware [cider.piggieback/wrap-cljs-repl]}}})
+```
+
+Hay que resaltar dos cosas:
+1. Re-Frame, al igual que Reagent, es una dependencia de tiempo de compilación y por lo tanto va en el perfil `dev`.
+2. ¿Se acuerdan del modo `:pedantic? :abort`? En mi caso cuando agregué Re-Frame, leiningen me advirtió que había un conflicto entre `tools.logging` proporcionado por `piggieback`, y la misma librería en Re-Frame.
+
+```
+Possibly confusing dependencies found:
+[re-frame "0.10.5"] -> [org.clojure/tools.logging "0.3.1"]
+ overrides
+[cider/piggieback "0.3.8"] -> [nrepl "0.4.3"] -> [org.clojure/tools.logging "0.4.1"]
+
+Consider using these exclusions:
+[cider/piggieback "0.3.8" :exclusions [org.clojure/tools.logging]]
+
+Aborting due to :pedantic? :abort
+```
+
+En mi caso prefiero este comportamiento que toparme después con errores en tiempo de ejecución por versiones incompatibles. En este caso tomo la sugerencia de leiningen y agrego la exclusión a `piggieback`. En lo general se recomienda mantener la versión más antigua y si se fijan `piggieback` incluye la versión `0.4.1` mientras que Re-Frame la versión `0.3.1` de la misma librería.
+
+Re-Frame es lo suficientemente grande como para merecer su propio artículo. De hecho Reagent igual, aquí solo tocamos la superficie. Por esta razón doy por concluida la Fase 4.
+
+# Palabras Finales
+El propósito principal de la Fase 4 fue mostrar cómo arreglar el _hot reload_ con Figwheel cuando agregamos Reagent y/o Re-Frame a nuestro proyecto. La mayoría de los que vienen a ClojureScript lo hacen para hacer _frontend_ y la popularidad de las librerías y _frameworks_ que utilizan React, me hizo considerar que este sería un punto de frustración para los que están iniciando este viaje.
+
+La Fase 4 da por concluida la configuración del ambiente de desarrollo. La Fase 5 será una colección de trucos y consejos, principalmente sobre cómo tomar todo lo que hemos visto y montarlo detrás de una máquina virtual o contenedor. Porque por ahí alguien dijo:
+
+>Jamás voy a volver a instalar un ambiente de desarrollo en mi computadora.
 
 # Enlaces
 [Fase 1](https://blog.devz.mx/clojurescript-sin-atajos-fase-1/)
