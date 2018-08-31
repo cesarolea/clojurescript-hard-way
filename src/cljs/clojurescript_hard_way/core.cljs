@@ -1,5 +1,6 @@
 (ns ^:figwheel-hooks clojurescript-hard-way.core
-  (:require [reagent.core :as r]))
+  (:require [reagent.core :as r]
+            [cljsjs.jquery]))
 
 (defn bulma-example []
   [:div {:class "columns"}
@@ -18,7 +19,8 @@
 
 (defn ^:after-load mount-root []
   (r/render [banner]
-            (.getElementById js/document "app")))
+            (.get (js/$ "#app") 0) ;; usamos jQuery para obtener la referencia a "app"
+            #_(.getElementById js/document "app")))
 
 (defn ^:export main []
   ;; do some other init

@@ -35,7 +35,8 @@
                         [cider/piggieback "0.3.8" :exclusions [org.clojure/tools.logging]]
                         [reagent "0.8.1"]
                         [re-frame "0.10.5"]
-                        [org.webjars.npm/bulma "0.7.1"]]
+                        [org.webjars.npm/bulma "0.7.1"]
+                        [cljsjs/jquery "3.2.1-0"]]
          :source-paths ["env/dev/clj"]
          :repl-options {:init-ns user
                         :nrepl-middleware [cider.piggieback/wrap-cljs-repl]}}})

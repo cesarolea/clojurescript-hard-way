@@ -209,4 +209,29 @@ No hay que perder de vista la razón por la que hacemos toda esta configuración
 La cuestión es que en producción, por lo general queremos un solo `jar` que contenga todo nuestro código y las dependencias (tanto del _frontend_ como del _backend_). En este caso eliminamos la necesidad de depender de procesos y herramientas externos, simplificamos muchísimo la instalación en producción y en general la administración de la aplicación como tal. Instalarla es literalmente copiar un `jar` y ejecutarlo.
 
 # CLJSJS
-No es un trabalenguas. 
+No es un trabalenguas. En las propias palabras del proyecto, [CLJSJS](http://cljsjs.github.io) provee una manera fácil para utilizar librerías de JavaScript en ClojureScript.
+
+Parece similar a lo que logramos anteriormente con WebJars, pero no es exactamente lo mismo. Con WebJars podemos incluir otras cosas que **no** son únicamente librerías de JavaScript, de hecho en nuestro caso es un archivo CSS. En el caso de CLJSJS se centra en cómo depender de librerías de JavaScript para hacer más fácil su uso desde ClojureScript.
+
+Veamos un ejemplo rápido: requerir y utilizar `jQuery` desde ClojureScript.
+
+Agregamos la dependencia en `project.clj`
+
+    [cljsjs/jquery "3.2.1-0"]
+
+Requerimos la librería en nuestro código. En `core.cljs`:
+
+```
+(ns ^:figwheel-hooks clojurescript-hard-way.core
+  (:require [reagent.core :as r]
+            [cljsjs.jquery]))
+```
+
+Y es todo. Ya lo podemos usar:
+
+```
+(defn ^:after-load mount-root []
+  (r/render [banner]
+            (.get (js/$ "#app") 0) ;; usamos jQuery para obtener la referencia a "app"
+  ))
+```
