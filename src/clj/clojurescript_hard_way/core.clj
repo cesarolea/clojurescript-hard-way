@@ -12,7 +12,7 @@
                                  :css-dirs []
                                  :open-url false
                                  :mode :serve
-                                 :ring-handler clojurescript-hard-way.figwheel/app}})
+                                 :ring-handler 'clojurescript-hard-way.figwheel/app}})
   :stop (fw-api/stop "dev"))
 
 (defstate ^{:on-reload :noop} cljs-repl

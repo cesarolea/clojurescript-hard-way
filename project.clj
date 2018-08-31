@@ -26,7 +26,7 @@
   :target-path "target/%s"
   :profiles
   {:uberjar {:aot :all}
-   :dev {:dependencies [[com.bhauman/figwheel-main "0.1.7" :exclusions [commons-codec
+   :dev {:dependencies [[com.bhauman/figwheel-main "0.1.8" :exclusions [commons-codec
                                                                         com.fasterxml.jackson.core/jackson-core]]
                         [com.bhauman/rebel-readline-cljs "0.1.4"]
                         [org.clojure/clojurescript "1.10.339" :exclusions [commons-codec
