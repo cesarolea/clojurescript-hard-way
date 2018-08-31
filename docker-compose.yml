@@ -1,0 +1,16 @@
+version: "3"
+
+services:
+  cljs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - MY_ENV_VAR=MY-ENV-VAL
+    volumes:
+      - .:/app
+      - ~/.m2:/root/.m2
+      - ~/.lein:/root/.lein
+    ports:
+      - "9500:9500"
+      - "31337:31337"

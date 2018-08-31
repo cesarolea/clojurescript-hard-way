@@ -1,3 +1,12 @@
+# Introducción
+Esta es la quinta y última fase de la serie ClojureScript, sin atajos. Si siguen la serie desde la Fase 1 ya tienen todo el conocimiento necesario (y hasta más) para crear su propio ambiente de desarrollo, ser altamente productivos y lo más importante: adaptado a sus necesidades y entendiendo el por qué de las cosas.
+
+La Fase 5 es una colección de temas relacionados, pero construyendo sobre lo visto en las fases anteriores. En realidad nada de lo que se ve aquí es esencial, simplemente algunos ejemplos que les pueden ahorrar algo de tiempo.
+
+Específicamente vamos a hablar cómo utilizar recursos y librerías de JavaScript en nuestro proyecto ClojureScript, y cómo usar Docker para tener nuestro ambiente virtualizado.
+
+Bienvenido a la Fase 5. Manos a la obra.
+
 # WebJars
 [WebJars](https://www.webjars.org) en sus propias palabras son librerías para hacer desarrollo del lado del cliente (_frontend_ o _client side_, como jQuery o Bootstrap) empaquetadas en formato `jar`.
 
@@ -235,3 +244,74 @@ Y es todo. Ya lo podemos usar:
             (.get (js/$ "#app") 0) ;; usamos jQuery para obtener la referencia a "app"
   ))
 ```
+
+# Clojure, ClojureScript, Figwheel & Docker
+A continuación voy a mostrar una receta para virtualizar nuestro ambiente de desarrollo con Docker. Lo único específico de ClojureScript es la configuración de Figwheel. Si no están familiarizados con Docker no les será de mucha utilidad ya que en realidad este no es un tutorial sobre el uso de Docker, pero si ya utilizan normalmente Docker para virtualizar sus ambientes de desarrollo entonces pueden simplemente utilizar el código que aquí presento y adaptarlo a sus necesidades.
+
+Cuando ejecutamos nuestra aplicación ClojureScript con Figwheel, este abre una conexión por websocket que por defecto es "localhost". Esto funciona bien cuando el proceso de Figwheel se está ejecutando en la misma computadora que el navegador, pero no funciona cuando nuestro ambiente de desarrollo está instalado en una máquina virtual.
+
+Existen varias soluciones para este problema, y a continuación presento dos:
+
+## Mapear el puerto en Docker / Vagrant
+Esta es la opción recomendada: Simplemente mapeamos el puerto `9500` que usa por defecto Figwheel, y todo va a funcionar como si estuviera local.
+
+O si se quieren complicar la existencia...
+
+## Configurar Figwheel para conectarse a otro _host_
+Figwheel soporta una configuración `:connect-url` en donde se le puede especificar la URL a donde queremos que se conecte Figwheel. Esta variable en realidad es un templete con la siguiente forma:
+
+    "ws://[[config-hostname]]:[[server-port]]/figwheel-connect"
+
+La información completa se encuentra [en la documentación de Figwheel](https://figwheel.org/config-options#connect-url) que les recomiendo ampliamente leer y expandir sus horizontes.
+
+## Ejemplo con Docker y Docker Compose
+Creamos un archivo `Dockerfile` en la raíz del proyecto con lo siguiente:
+
+```
+FROM clojure:lein-alpine
+MAINTAINER César Olea <cesarolea@gmail.com>
+
+WORKDIR /app
+CMD ["lein", "repl", ":headless", ":host", "0.0.0.0", ":port", "31337"]
+```
+El trabajo duro lo hace la imagen `clojure:lein-alpine` de la que estamos basando nuestra propia imagen. Nosotros simplemente declaramos el directorio donde estará montado nuestro código (`/app`) y el comando que se va a ejecutar.
+
+Lo anterior lo complementamos con un archivo `docker-compose.yml`
+
+```
+version: "3"
+
+services:
+  cljs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - MY_ENV_VAR=MY-ENV-VAL
+    volumes:
+      - .:/app
+      - ~/.m2:/root/.m2
+      - ~/.lein:/root/.lein
+    ports:
+      - "9500:9500"
+      - "31337:31337"
+```
+
+Simplemente le indicamos el contexto (el directorio actual) y el `Dockerfile` correspondiente. Se pueden declarar variables de entorno, aunque en este caso no necesitamos ninguna.
+
+Los volúmenes cargados son:
+- El directorio actual a `/app` que contiene nuestro código.
+- El directorio `~/.m2` a `/root/.m2` que contiene las dependencias. Esto se hace para no tener que estar descargando las dependencias cada vez que ejecutamos la imagen (solo se van a descargar una vez).
+- El directorio `~/.lein~ a `/root/lein` para que la imagen use la configuración local de leiningen.
+
+Estamos mapeando dos puertos:
+- `9500` para Figwheel.
+- `31337` para nREPL.
+
+Después simplemente `docker-compose up`, nos conectamos a `nREPL` y hacemos `(mount/start)` para iniciar Figwheel como siempre.
+
+# Enlaces
+[Fase 1](https://blog.devz.mx/clojurescript-sin-atajos-fase-1/): Projecto básico y compilación con `lein-cljsbuild`.
+[Fase 2](https://blog.devz.mx/clojurescript-sin-atajos-fase-2/): Figwheel.
+[Fase 3](https://blog.devz.mx/clojurescript-sin-atajos-fase-3/): REPL.
+[Fase 4](https://blog.devz.mx/clojurescript-sin-atajos-fase-4/): Reagent y Re-Frame.
