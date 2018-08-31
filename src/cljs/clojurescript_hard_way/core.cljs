@@ -1,35 +1,25 @@
 (ns ^:figwheel-hooks clojurescript-hard-way.core
   (:require [reagent.core :as r]))
 
-;; let's try this again...
-;; first the animation
-;; good, now reload
-;; WE DID IT!
+(defn bulma-example []
+  [:div {:class "columns"}
+   [:div {:class "column"} "First column"]
+   [:div {:class "column"} "Second column"]
+   [:div {:class "column"} "Third column"]
+   [:div {:class "column"} "Fourth column"]])
 
-(defn doomguy-animation []
-  (let [click-count (r/atom 0)]
-    (fn []
-      [:img {:id "doomguy"
-             :src (str "images/doomguy-frame-"
-                       (if (even? @click-count) "even" "odd")
-                       ".png")
-             :on-click #(swap! click-count inc)}])))
-
-(defn title-component []
-  [:div "Doomguy Elite Animation Software"
-   [:p [doomguy-animation]]])
+(defn banner []
+  [:div
+   [:section {:class "hero"}
+    [:div {:class "hero-body"}
+     [:h1 {:class "title"} "ClojureScript <3 WebJars"]
+     [:h2 {:class "subtitle"} "Using bulma as an example"]]]
+   [bulma-example]])
 
 (defn ^:after-load mount-root []
-  (r/render [title-component]
+  (r/render [banner]
             (.getElementById js/document "app")))
 
 (defn ^:export main []
   ;; do some other init
-
-  (-> js/document
-      (.getElementsByTagName "head")
-      (aget 0)
-      .-innerHTML
-      (set! "<style>body{color:#FF0000; background-color:#1B1B1B;}</style>"))
-
   (mount-root))

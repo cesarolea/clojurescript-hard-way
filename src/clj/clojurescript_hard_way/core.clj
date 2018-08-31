@@ -1,6 +1,7 @@
 (ns clojurescript-hard-way.core
   (:require [figwheel.main.api :as fw-api]
-            [mount.core :refer [defstate]])
+            [mount.core :refer [defstate]]
+            [clojurescript-hard-way.figwheel])
   (:gen-class))
 
 (defstate ^{:on-reload :noop} figwheel
@@ -10,7 +11,8 @@
                                  :watch-dirs ["src/cljs"]
                                  :css-dirs []
                                  :open-url false
-                                 :mode :serve}})
+                                 :mode :serve
+                                 :ring-handler clojurescript-hard-way.figwheel/app}})
   :stop (fw-api/stop "dev"))
 
 (defstate ^{:on-reload :noop} cljs-repl
